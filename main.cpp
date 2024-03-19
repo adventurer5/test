@@ -1,6 +1,8 @@
 #include <iostream>
 #include <unordered_map>
 #include <string>
+#include <termios.h>
+#include <unistd.h>
 #include "bcrypt.h"
 
 // simple program that checks a username and password
@@ -17,6 +19,11 @@ int main() {
     int loginAttempts = 0;
     const int maxLoginAttempts = 3;
 
+    termios oldt;
+    tcgetattr(STDIN_FILENO, &oldt);
+    termios newt = oldt;
+    newt.c_lflag &= ~ECHO;
+
     while (true) {
         std::string username, password;
         
@@ -24,7 +31,9 @@ int main() {
         std::cin >> username;
         
         std::cout << "Enter password: ";
+        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
         std::cin >> password;
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
         
         if (users.find(username) != users.end()) {
           std::string passwordHash = users[username];
